@@ -118,7 +118,7 @@ class RidersWidget(RidersUI):
                 item.setBackground(QtGui.QColor("#A3FFFF"))
             if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 49:
                 item.setBackground(QtGui.QColor("#FFD7A3"))
-            if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 59:
+            if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 100:
                 item.setBackground(QtGui.QColor("#BFBFBF"))
             if isinstance(rider.age_group, AgeGroup) and rider.age_group.gender == Gender.F:
                 item.setBackground(QtGui.QColor("#FFBFF3"))

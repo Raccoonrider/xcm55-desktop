@@ -26,7 +26,7 @@ class MainWindow(MainUI):
 
         self.autobackup_timer = QtCore.QTimer(self)
         self.autobackup_timer.setSingleShot(False)
-        self.autobackup_timer.setInterval(1000)#1000 * 60 * 5)
+        self.autobackup_timer.setInterval(1000 * 60 * 5)
         self.autobackup_timer.timeout.connect(save_cache)
         self.autobackup_timer.start()
 
