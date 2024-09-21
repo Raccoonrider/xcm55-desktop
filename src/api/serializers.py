@@ -2,13 +2,15 @@ import re
 import json
 import logging
 import datetime
+from dataclasses import dataclass, field, asdict
 
 if __name__ == '__main__':
     import os, sys
     sys.path.append(os.getcwd())
 
-from models import Event, Rider, AgeGroup
 from enums import *
+from models import Event, Rider, AgeGroup, Result
+from common.duration import duration_string
 
 
 class BaseSerializer:
@@ -125,9 +127,9 @@ class RiderSerializer(BaseSerializer):
         "first_name",
         "birthday",
         "gender",
+        "phone_number",
         "category",
         "distance",
-        "result",
         "user_profile_id",
         "helmet_not_needed",
         "payment_confirmed",
@@ -138,6 +140,7 @@ class RiderSerializer(BaseSerializer):
         instance: Rider
         instance.last_name = data['user_profile']['last_name']
         instance.first_name = data['user_profile']['first_name']
+        instance.phone_number = data['user_profile']['phone_number']
         instance.birthday = datetime.date.fromisoformat(data['user_profile']['birthday'])
         instance.gender = Gender(data['user_profile']['gender'])
         instance.user_profile_id = data['user_profile']['id']
@@ -174,3 +177,13 @@ class EventSerializer(BaseSerializer):
 
         return event
 
+class ResultSerializer:
+    model = Result
+
+    def serialize(self, instance:Result) -> dict:
+        data = asdict(instance)
+        if data.get('time'):
+            data['time'] = duration_string(data.get('time'))
+        data['status'] = int(data.get('status'))
+
+        return data

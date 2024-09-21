@@ -2,8 +2,14 @@ import pickle
 import json
 import logging
 
+if __name__ == '__main__':
+    import os, sys
+    sys.path.append(os.getcwd())
+
 import config
-from api.requests import load_event, load_age_groups, load_riders 
+from api.signal_router import router
+from api.requests import load_event, load_age_groups, load_riders, post_results
+from models import Result
 
 def save_cache():
     if config.paths.cache.exists():
@@ -66,3 +72,7 @@ if event is None:
 
     for rider in event.riders: 
         rider.set_age_group(event=event)
+
+def send_results():
+    results = Result.from_event(event)
+    post_results(results)

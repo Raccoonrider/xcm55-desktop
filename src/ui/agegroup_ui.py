@@ -5,6 +5,13 @@ class AgeGroupUI(QtWidgets.QWidget):
         super().__init__(parent)
 
         self.header_label = QtWidgets.QLabel(self)
+        self.finished_caption_label = QtWidgets.QLabel("Финиш", self)
+        self.en_route_caption_label = QtWidgets.QLabel("В пути", self)
+        self.total_caption_label = QtWidgets.QLabel("Всего", self)
+        self.finished_label = QtWidgets.QLabel(self)
+        self.en_route_label = QtWidgets.QLabel(self)
+        self.total_label = QtWidgets.QLabel(self)
+
 
         self.header_label.setStyleSheet("""
             font-weight: bold;
@@ -20,23 +27,19 @@ class AgeGroupUI(QtWidgets.QWidget):
         self.table.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
         self.table.setSortingEnabled(False)
         self.table.setColumnCount(3) 
-        self.table.setRowCount(6)
         self.table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.table.horizontalHeader().hide()
-        self.table.verticalHeader().hide()
-        self.table.setFixedHeight(self.table.rowCount() * self.table.rowHeight(0) + 2)
 
-        self.table.setItem(0, 0, QtWidgets.QTableWidgetItem("I"))
-        self.table.setItem(1, 0, QtWidgets.QTableWidgetItem("II"))
-        self.table.setItem(2, 0, QtWidgets.QTableWidgetItem("III"))
-        self.table.setItem(3, 0, QtWidgets.QTableWidgetItem("Финиш"))
-        self.table.setItem(4, 0, QtWidgets.QTableWidgetItem("В пути"))
-        self.table.setItem(5, 0, QtWidgets.QTableWidgetItem("Всего"))
-
-        layout = QtWidgets.QVBoxLayout(self)
-        layout.addWidget(self.header_label)
-        layout.addWidget(self.table)
+        layout = QtWidgets.QGridLayout(self)
+        layout.addWidget(self.header_label, 0, 0, 1, 2)
+        layout.addWidget(self.table, 1, 0, 1, 2)
+        layout.addWidget(self.finished_caption_label, 5, 0)
+        layout.addWidget(self.en_route_caption_label, 6, 0)
+        layout.addWidget(self.total_caption_label, 7, 0)
+        layout.addWidget(self.finished_label, 5, 1)
+        layout.addWidget(self.en_route_label, 6, 1)
+        layout.addWidget(self.total_label, 7, 1)
 
 
 

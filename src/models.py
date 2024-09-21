@@ -16,6 +16,7 @@ class Event:
     riders: list['Rider'] = field(default_factory=list)
     marathon_start_time:datetime = None
     halfmarathon_start_time:datetime = None
+    log: list = field(default_factory=list)
 
 @dataclass
 class Rider:
@@ -24,12 +25,12 @@ class Rider:
     first_name: int
     birthday: date
     gender: Gender
+    phone_number: str
     distance: int
     age_group: 'AgeGroup' = None
     category: Category = Category.Default
     start_time: datetime = None
     finish_time: datetime = None
-    result: timedelta = None
     place: int = None
     user_profile_id: int = None
     started: bool = True
@@ -117,12 +118,26 @@ class Rider:
             return "DNS"
         if self.start_time is None or self.finish_time is None:
             return ""
-        self.result = self.finish_time - self.start_time
         t = round(self.result.total_seconds())
         h, t = divmod(t, 3600)
         m, s = divmod(t, 60)
 
-        return F"{h:02d}:{m:02d}:{s:02d}"       
+        return F"{h:02d}:{m:02d}:{s:02d}"      
+
+    @property
+    def result(self):
+        if self.start_time is None or self.finish_time is None:
+            return None
+        return  self.finish_time - self.start_time
+    
+    @staticmethod
+    def sort_key(rider:'Rider'):
+        return (
+            rider.result is None, 
+            rider.dnf, 
+            rider.dsq, 
+            not rider.started,
+            rider.result)
 
 
 @dataclass(unsafe_hash=True)
@@ -137,3 +152,40 @@ class AgeGroup:
         gender = ["М", "Ж"][self.gender == Gender.F]
         return f"{gender} {self.age_min}-{self.age_max}"
 
+@dataclass
+class Result:
+    event: int
+    route: int
+    user_profile: int
+    time: timedelta = None
+    status: ResultStatus = ResultStatus.OK
+
+    @classmethod
+    def from_event(cls, event:Event) -> list['Result']:
+        route_ids = [1, 2] # FIX ME - hardcode
+
+        results = []
+        marathon = max(event.routes)
+        for rider in event.riders:
+            kwargs = {}
+            kwargs['event'] = event.id
+            kwargs['route'] = route_ids[rider.distance != marathon]
+            kwargs['user_profile'] = rider.user_profile_id
+            if rider.started == False:
+                continue
+            elif rider.dnf:
+                kwargs['status'] = ResultStatus.DNF
+            elif rider.dsq:
+                kwargs['status'] = ResultStatus.DSQ
+                if rider.start_time and rider.finish_time:
+                    kwargs['time'] = rider.finish_time - rider.start_time
+            else:
+                kwargs['status'] = ResultStatus.OK
+                if rider.start_time and rider.finish_time:
+                    kwargs['time'] = rider.finish_time - rider.start_time
+            
+
+            instance = cls(**kwargs)
+            results.append(instance)
+
+        return results

@@ -6,13 +6,12 @@ if __name__ == '__main__':
 
 from api.data import event
 from api.signal_router import router
-from ui.riders_ui import RidersUI
+from ui.rider_list_ui import RiderListUI
+from views.rider_detail import RiderDetailWidget
 from models import Rider, Event, AgeGroup
 from enums import *
 
-class RidersWidget(RidersUI):
-    event:Event
-
+class RiderListWidget(RiderListUI):
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -22,6 +21,10 @@ class RidersWidget(RidersUI):
         self.add_button.clicked.connect(self.add_rider)
         router.rider_finished.connect(self.update_rider)
         router.rider_place.connect(self.update_rider_place)
+        self.table.doubleClicked.connect(self.table_double_clicked)
+
+        self.rider_windows = []
+
 
     def add_rider(self, *args, rider:Rider|None=None):
         row = self.table.rowCount()
@@ -73,58 +76,57 @@ class RidersWidget(RidersUI):
         finish_button.clicked.connect(self.get_update_result_slot(rider))
         self.table.setCellWidget(row, 9, finish_button)
 
-        finish_minus_button = QtWidgets.QPushButton("-", self)
-        finish_minus_button.clicked.connect(rider.finish_minus)
-        finish_minus_button.clicked.connect(self.get_update_result_slot(rider))
-        finish_minus_button.setFixedWidth(finish_minus_button.height())
-        self.table.setCellWidget(row, 10, finish_minus_button)
-
-        finish_plus_button = QtWidgets.QPushButton("+", self)
-        finish_plus_button.clicked.connect(rider.finish_plus)
-        finish_plus_button.clicked.connect(self.get_update_result_slot(rider))
-        finish_plus_button.setFixedWidth(finish_plus_button.height())
-        self.table.setCellWidget(row, 11, finish_plus_button)
-
         dnf_button = QtWidgets.QPushButton("DNF", self)
         dnf_button.clicked.connect(rider.did_not_finish)
         dnf_button.clicked.connect(self.get_update_result_slot(rider))
         dnf_button.setFixedWidth(dnf_button.height())
-        self.table.setCellWidget(row, 12, dnf_button)
+        self.table.setCellWidget(row, 10, dnf_button)
 
         dsq_button = QtWidgets.QPushButton("DSQ", self)
         dsq_button.clicked.connect(rider.disqualify)
         dsq_button.clicked.connect(self.get_update_result_slot(rider))
         dsq_button.setFixedWidth(dsq_button.height())
-        self.table.setCellWidget(row, 13, dsq_button)
+        self.table.setCellWidget(row, 11, dsq_button)
 
         cancel_finish_button = QtWidgets.QPushButton("Отмена", self)
         cancel_finish_button.clicked.connect(rider.cancel_finish)
         cancel_finish_button.clicked.connect(self.get_update_result_slot(rider))
-        self.table.setCellWidget(row, 14, cancel_finish_button)
+        self.table.setCellWidget(row, 12, cancel_finish_button)
 
-        for col in range(15):
-            item = self.table.item(row, col)
-            if item is None:
-                item = QtWidgets.QTableWidgetItem("")
-                self.table.setItem(row, col, item)
+        # for col in range(15):
+        #     item = self.table.item(row, col)
+        #     if item is None:
+        #         item = QtWidgets.QTableWidgetItem("")
+        #         self.table.setItem(row, col, item)
 
-            if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 29:
-                item.setBackground(QtGui.QColor("#BAFFBC"))
-            if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 34:
-                item.setBackground(QtGui.QColor("#FFF9BA"))
-            if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 39:
-                item.setBackground(QtGui.QColor("#D6DBFF"))
-            if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 44:
-                item.setBackground(QtGui.QColor("#A3FFFF"))
-            if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 49:
-                item.setBackground(QtGui.QColor("#FFD7A3"))
-            if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 100:
-                item.setBackground(QtGui.QColor("#BFBFBF"))
-            if isinstance(rider.age_group, AgeGroup) and rider.age_group.gender == Gender.F:
-                item.setBackground(QtGui.QColor("#FFBFF3"))
+        #     if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 29:
+        #         item.setBackground(QtGui.QColor("#BAFFBC"))
+        #     if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 34:
+        #         item.setBackground(QtGui.QColor("#FFF9BA"))
+        #     if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 39:
+        #         item.setBackground(QtGui.QColor("#D6DBFF"))
+        #     if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 44:
+        #         item.setBackground(QtGui.QColor("#A3FFFF"))
+        #     if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 49:
+        #         item.setBackground(QtGui.QColor("#FFD7A3"))
+        #     if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 100:
+        #         item.setBackground(QtGui.QColor("#BFBFBF"))
+        #     if isinstance(rider.age_group, AgeGroup) and rider.age_group.gender == Gender.F:
+        #         item.setBackground(QtGui.QColor("#FFBFF3"))
 
-            if rider.age_group == "Элита":
-                item.setBackground(QtGui.QColor("#FFB5B5"))
+        #     if rider.age_group == "Элита":
+        #         item.setBackground(QtGui.QColor("#FFB5B5"))
+
+
+
+    def table_double_clicked(self, index):
+        rider = event.riders[index.row()]
+
+        rider_window = RiderDetailWidget()
+        rider_window.set_data(rider)
+        rider_window.show()
+
+        self.rider_windows.append(rider_window)
 
 
     def get_update_result_slot(self, rider:Rider):
@@ -169,7 +171,7 @@ if __name__ == "__main__":
 
     from api.data import event
 
-    w = RidersWidget()
+    w = RiderListWidget()
     w.show()
 
     sys.exit(app.exec())

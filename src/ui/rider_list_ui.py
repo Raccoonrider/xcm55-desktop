@@ -1,6 +1,6 @@
 from PySide6 import QtCore, QtWidgets, QtGui
 
-class RidersUI(QtWidgets.QWidget):
+class RiderListUI(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -36,15 +36,16 @@ class RidersUI(QtWidgets.QWidget):
         self.table.setSelectionMode(QtWidgets.QTableWidget.SelectionMode.SingleSelection)
         self.table.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
         self.table.setSortingEnabled(True)
-        self.table.setColumnCount(15) #Прибыл № ФИО Категория Место Результат Финиш + - Отмена DNF DSQ Удалить
-        self.table.setHorizontalHeaderLabels(["№", "Участник", "Явка", "Опл", "Шлем", "Дист.", "Категория", "Место", "Результат", "", "", "", "", "", ""])
+        self.table.setColumnCount(13) #Прибыл № ФИО Категория Место Результат Финиш DNF DSQ Отмена
+        self.table.setHorizontalHeaderLabels(["№", "Участник", "Явка", "Опл", "Шлем", "Дист.", "Категория", "Место", "Результат", "", "", "", ""])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
         header.setMinimumSectionSize(15)
 
 
-        controls_layout = QtWidgets.QHBoxLayout()
+        controls_container = QtWidgets.QWidget(self)
+        controls_layout = QtWidgets.QHBoxLayout(controls_container)
         controls_layout.addWidget(self.number_edit)
         controls_layout.addWidget(self.last_name_edit)
         controls_layout.addWidget(self.first_name_edit)
@@ -58,9 +59,9 @@ class RidersUI(QtWidgets.QWidget):
         content_layout = QtWidgets.QVBoxLayout(self)
         content_layout.addWidget(self.header_label)
         content_layout.addWidget(self.table)
-        content_layout.addLayout(controls_layout)
+        content_layout.addWidget(controls_container)
 
-
+        controls_container.hide()
 
 
 
