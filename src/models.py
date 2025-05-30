@@ -18,6 +18,27 @@ class Event:
     halfmarathon_start_time:datetime = None
     log: list = field(default_factory=list)
 
+    def count_absolute_places(self):
+        absolute: list[tuple[int, Rider]] = []
+
+        for rider in self.riders:
+            if rider.age_group != "Полумарафон" and rider.result_seconds:
+                absolute.append((rider.result_seconds, rider))
+        
+        absolute.sort(key=lambda x: x[0])
+
+        place = 0
+        previous_seconds = None
+        for seconds, rider in absolute:
+            if seconds != previous_seconds:
+                place += 1
+
+            rider.absolute_place = place
+            rider.absolute_score = config.RATING_SCORES.get(place, 0)
+
+            previous_seconds = seconds
+    
+
 @dataclass
 class Rider:
     number: int
@@ -30,8 +51,11 @@ class Rider:
     age_group: 'AgeGroup' = None
     category: Category = Category.Default
     start_time: datetime = None
+    lap_times: list[datetime] = field(default_factory=list)
     finish_time: datetime = None
     place: int = None
+    absolute_place:int = None
+    absolute_score:int = None
     user_profile_id: int = None
     started: bool = True
     dsq: bool = False
@@ -88,15 +112,17 @@ class Rider:
         self.start_time = datetime.now()
 
     def finish(self):
-        self.finish_time = datetime.now()
+        if len(self.lap_times) < (self.laps - 1):
+            self.lap_times.append(datetime.now())
+        else:
+            self.finish_time = datetime.now()
 
-    def finish_plus(self):
-        if self.finish_time is not None:
-            self.finish_time += timedelta(seconds=1) 
-
-    def finish_minus(self):
-        if self.finish_time is not None:
-            self.finish_time -= timedelta(seconds=1) 
+    @property
+    def laps(self):
+        if self.age_group == "Полумарафон":
+            return config.LAPS_HALFMARATHON
+        else:
+            return config.LAPS_MARATHON
 
     def cancel_finish(self):
         self.finish_time = None
@@ -109,16 +135,26 @@ class Rider:
     def disqualify(self):
         self.dsq = True
 
-    def render_result(self):
+    def render_result(self, lap:int=None):
         if self.dsq:
             return "DSQ"
         if self.dnf:
             return "DNF"
         if not self.started and self.start_time is not None:
-            return "DNS"
-        if self.start_time is None or self.finish_time is None:
+            return "DNS"        
+        if self.start_time is None:
             return ""
-        t = round(self.result.total_seconds())
+        
+        if lap is None:
+            if self.finish_time is not None:
+                t = round(self.result.total_seconds())
+            else:
+                return ""
+        elif lap < len(self.lap_times):
+            t = round((self.lap_times[lap] - self.start_time).total_seconds())
+        else:
+            return ""
+        
         h, t = divmod(t, 3600)
         m, s = divmod(t, 60)
 
@@ -129,6 +165,12 @@ class Rider:
         if self.start_time is None or self.finish_time is None:
             return None
         return  self.finish_time - self.start_time
+    
+    @property
+    def result_seconds(self):
+        if self.result is None:
+            return None
+        return round(self.result.total_seconds())
     
     @staticmethod
     def sort_key(rider:'Rider'):

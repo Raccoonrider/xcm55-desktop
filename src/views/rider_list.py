@@ -4,6 +4,7 @@ if __name__ == '__main__':
     import os, sys
     sys.path.append(os.getcwd())
 
+import config
 from api.data import event
 from api.signal_router import router
 from ui.rider_list_ui import RiderListUI
@@ -20,8 +21,14 @@ class RiderListWidget(RiderListUI):
 
         self.add_button.clicked.connect(self.add_rider)
         router.rider_finished.connect(self.update_rider)
-        router.rider_place.connect(self.update_rider_place)
+        # router.rider_place.connect(self.update_rider_place)
         self.table.doubleClicked.connect(self.table_double_clicked)
+
+        self.update_absolute_timer = QtCore.QTimer(self)
+        self.update_absolute_timer.setSingleShot(False)
+        self.update_absolute_timer.setInterval(2000)
+        self.update_absolute_timer.timeout.connect(self.update_absolute_places)
+        self.update_absolute_timer.start()
 
         self.rider_windows = []
 
@@ -69,54 +76,40 @@ class RiderListWidget(RiderListUI):
         self.table.setItem(row, 5, QtWidgets.QTableWidgetItem(str(rider.distance)))
         self.table.setItem(row, 6, QtWidgets.QTableWidgetItem(str(rider.age_group)))
         self.table.setItem(row, 7, QtWidgets.QTableWidgetItem("{:02d}".format(rider.place) if rider.place else ''))
-        self.table.setItem(row, 8, QtWidgets.QTableWidgetItem(rider.render_result()))
+
+        col = 8
+        for i in range(config.LAPS_MARATHON)[:-1]:
+            self.table.setItem(row, col, QtWidgets.QTableWidgetItem(rider.render_result(lap=i)))
+            col += 1
+
+        self.table.setItem(row, col, QtWidgets.QTableWidgetItem(rider.render_result()))
+        col += 1
 
         finish_button = QtWidgets.QPushButton("Финиш", self)
         finish_button.clicked.connect(rider.finish)
         finish_button.clicked.connect(self.get_update_result_slot(rider))
-        self.table.setCellWidget(row, 9, finish_button)
+        self.table.setCellWidget(row, col, finish_button)
+        col += 1
 
         dnf_button = QtWidgets.QPushButton("DNF", self)
         dnf_button.clicked.connect(rider.did_not_finish)
         dnf_button.clicked.connect(self.get_update_result_slot(rider))
         dnf_button.setFixedWidth(dnf_button.height())
-        self.table.setCellWidget(row, 10, dnf_button)
+        self.table.setCellWidget(row, col, dnf_button)
+        col += 1
 
         dsq_button = QtWidgets.QPushButton("DSQ", self)
         dsq_button.clicked.connect(rider.disqualify)
         dsq_button.clicked.connect(self.get_update_result_slot(rider))
         dsq_button.setFixedWidth(dsq_button.height())
-        self.table.setCellWidget(row, 11, dsq_button)
+        self.table.setCellWidget(row, col, dsq_button)
+        col += 1
 
         cancel_finish_button = QtWidgets.QPushButton("Отмена", self)
         cancel_finish_button.clicked.connect(rider.cancel_finish)
         cancel_finish_button.clicked.connect(self.get_update_result_slot(rider))
-        self.table.setCellWidget(row, 12, cancel_finish_button)
-
-        # for col in range(15):
-        #     item = self.table.item(row, col)
-        #     if item is None:
-        #         item = QtWidgets.QTableWidgetItem("")
-        #         self.table.setItem(row, col, item)
-
-        #     if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 29:
-        #         item.setBackground(QtGui.QColor("#BAFFBC"))
-        #     if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 34:
-        #         item.setBackground(QtGui.QColor("#FFF9BA"))
-        #     if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 39:
-        #         item.setBackground(QtGui.QColor("#D6DBFF"))
-        #     if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 44:
-        #         item.setBackground(QtGui.QColor("#A3FFFF"))
-        #     if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 49:
-        #         item.setBackground(QtGui.QColor("#FFD7A3"))
-        #     if isinstance(rider.age_group, AgeGroup) and rider.age_group.age_max == 100:
-        #         item.setBackground(QtGui.QColor("#BFBFBF"))
-        #     if isinstance(rider.age_group, AgeGroup) and rider.age_group.gender == Gender.F:
-        #         item.setBackground(QtGui.QColor("#FFBFF3"))
-
-        #     if rider.age_group == "Элита":
-        #         item.setBackground(QtGui.QColor("#FFB5B5"))
-
+        self.table.setCellWidget(row, col, cancel_finish_button)
+        col += 1
 
 
     def table_double_clicked(self, index):
@@ -145,8 +138,13 @@ class RiderListWidget(RiderListUI):
     def update_rider(self, rider:Rider):
         for row in range(self.table.rowCount()):
             if self.table.item(row, 0).text() ==  "{:03d}".format(rider.number):
-                result_item = self.table.item(row, 8)
-                result_item.setText(str(rider.render_result()))
+                for i, lap in enumerate(range(rider.laps), start=8):
+                    lap_item = self.table.item(row, i)
+                    lap_item.setText(rider.render_result(lap))
+                
+                result_item = self.table.item(row, 8 + config.LAPS_MARATHON - 1)
+                result_item.setText(rider.render_result())
+                
                 
     @QtCore.Slot(Rider)
     def update_rider_place(self, rider:Rider):
@@ -154,6 +152,22 @@ class RiderListWidget(RiderListUI):
             if self.table.item(row, 0).text() ==  "{:03d}".format(rider.number):
                 place_item = self.table.item(row, 7)
                 place_item.setText("{:02d}".format(rider.place))
+
+    def update_absolute_places(self):
+        event.count_absolute_places()
+
+        for row in range(self.table.rowCount()):
+            cell = self.table.item(row, 0)
+            number = int(cell.text().lstrip('0'))
+
+            for rider in event.riders:
+                place_item = self.table.item(row, 7)
+                if rider.number == number:
+                    if rider.absolute_score is not None:
+                        place_item.setText("{:02d}".format(rider.absolute_score))
+                    else:
+                        place_item.setText('')
+                    break
 
 
     def clear_inputs(self):

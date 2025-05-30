@@ -28,10 +28,15 @@ class MultiAddWidget(MultiAddUI):
         self.text_edit.installEventFilter(self)
 
     def eventFilter(self, obj, event):
-        if event.type() == QtCore.QEvent.KeyPress and obj is self.text_edit:
-            if event.key() == QtCore.Qt.Key_Return and self.text_edit.hasFocus():
+        if (event.type() == QtCore.QEvent.KeyPress 
+            and obj is self.text_edit
+            and self.text_edit.hasFocus()
+            and self.text_edit.toPlainText() != ""
+        ):
+            if (event.key() in [QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter]):
                 self.finish()
         return super().eventFilter(obj, event)
+
 
 
     def parse(self):
@@ -48,12 +53,11 @@ class MultiAddWidget(MultiAddUI):
         t = datetime.now()
 
         for rider in riders:
-            rider.finish_time = t
+            rider.finish()
             router.rider_finished.emit(rider)
-
-        message = "Финиш: " + ", ".join([x.format_surname_number() for x in riders])
+            
+        message = "Зафиксированы: " + ", ".join([x.format_surname_number() for x in riders])
         self.send_status(message)
-
 
     def dnf(self):
         riders = self.parse()

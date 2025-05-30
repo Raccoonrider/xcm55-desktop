@@ -1,4 +1,5 @@
 from PySide6 import QtCore, QtWidgets, QtGui
+import config
 
 class AgeGroupUI(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -26,7 +27,7 @@ class AgeGroupUI(QtWidgets.QWidget):
         self.table.setSelectionMode(QtWidgets.QTableWidget.SelectionMode.SingleSelection)
         self.table.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
         self.table.setSortingEnabled(False)
-        self.table.setColumnCount(3) 
+        self.table.setColumnCount(3 + config.LAPS_MARATHON - 1) 
         self.table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.table.horizontalHeader().hide()

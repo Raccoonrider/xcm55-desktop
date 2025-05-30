@@ -51,7 +51,16 @@ class MainWindow(MainUI):
         self.log_textedit.setText("\n".join(event.log))
 
     def log_finish(self, rider:Rider):
-        text = f"Финиш: {rider.render_result()} {rider.format_name()}"
+        if rider.dnf:
+            text = F"DNF: {rider.format_name()}"
+        elif not rider.started:
+            text = F"DNS: {rider.format_name()}"
+        elif rider.finish_time:
+            text = f"Финиш: {rider.render_result()} {rider.format_name()}"
+        else:
+            lap = len(rider.lap_times) - 1
+            text = f"Круг {lap+1}: {rider.render_result(lap)} {rider.format_name()}"
+
         self.log(text)
 
     def log(self, text:str):

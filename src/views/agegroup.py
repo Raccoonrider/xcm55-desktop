@@ -64,7 +64,12 @@ class AgeGroupWidget(AgeGroupUI):
                 QtWidgets.QTableWidgetItem(str(rider.number)))
             self.table.setItem(row, 1, 
                 QtWidgets.QTableWidgetItem(rider.format_name()))
-            self.table.setItem(row, 2, 
+            
+            for i, lap in enumerate(range(rider.laps), start=2):
+                self.table.setItem(row, i,
+                QtWidgets.QTableWidgetItem(rider.render_result(lap)))
+
+            self.table.setItem(row, 2 + config.LAPS_MARATHON - 1, 
                 QtWidgets.QTableWidgetItem(rider.render_result()))
             row += 1
 

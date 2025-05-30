@@ -1,4 +1,5 @@
 from PySide6 import QtCore, QtWidgets, QtGui
+import config
 
 class RiderListUI(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -36,8 +37,9 @@ class RiderListUI(QtWidgets.QWidget):
         self.table.setSelectionMode(QtWidgets.QTableWidget.SelectionMode.SingleSelection)
         self.table.setSelectionBehavior(QtWidgets.QTableWidget.SelectionBehavior.SelectRows)
         self.table.setSortingEnabled(True)
-        self.table.setColumnCount(13) #Прибыл № ФИО Категория Место Результат Финиш DNF DSQ Отмена
-        self.table.setHorizontalHeaderLabels(["№", "Участник", "Явка", "Опл", "Шлем", "Дист.", "Категория", "Место", "Результат", "", "", "", ""])
+        self.table.setColumnCount(13 + config.LAPS_MARATHON - 1) #Прибыл № ФИО Категория Место Круг1 Круг2 ... Результат Финиш DNF DSQ Отмена
+        laps = [f"Круг {i}" for i in range(config.LAPS_MARATHON)][1:]
+        self.table.setHorizontalHeaderLabels(["№", "Участник", "Явка", "Опл", "Шлем", "Дист.", "Категория", "Очки", *laps, "Финиш", "", "", "", ""])
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.Stretch)
@@ -76,7 +78,7 @@ if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
 
-    w = RidersUI()
+    w = RiderListUI()
     w.show()
 
     sys.exit(app.exec())

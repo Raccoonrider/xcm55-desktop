@@ -74,6 +74,8 @@ if event is None:
     for rider in event.riders: 
         rider.set_age_group(event=event)
 
+    save_cache()
+
 def send_results():
     results = Result.from_event(event)
     post_results(results)
