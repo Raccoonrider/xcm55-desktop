@@ -69,6 +69,7 @@ if event is None:
     event = load_event()
     event.age_groups = load_age_groups()
     event.riders = sorted(load_riders(), key=lambda x: (x.number or 0, x.last_name))
+    event.log = []
 
     for rider in event.riders: 
         rider.set_age_group(event=event)

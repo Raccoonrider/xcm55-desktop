@@ -120,13 +120,17 @@ class RiderListWidget(RiderListUI):
 
 
     def table_double_clicked(self, index):
-        rider = event.riders[index.row()]
+        row = index.row()
+        cell = self.table.item(row, 0)
+        number = int(cell.text().lstrip('0'))
 
-        rider_window = RiderDetailWidget()
-        rider_window.set_data(rider)
-        rider_window.show()
-
-        self.rider_windows.append(rider_window)
+        for rider in event.riders:
+            if rider.number == number:
+                rider_window = RiderDetailWidget()
+                rider_window.set_data(rider)
+                rider_window.show()
+                self.rider_windows.append(rider_window)
+                return
 
 
     def get_update_result_slot(self, rider:Rider):
