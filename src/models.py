@@ -199,12 +199,13 @@ class Result:
     event: int
     route: int
     user_profile: int
+    number: int
     time: timedelta = None
     status: ResultStatus = ResultStatus.OK
 
     @classmethod
     def from_event(cls, event:Event) -> list['Result']:
-        route_ids = [1, 2] # FIX ME - hardcode
+        route_ids = [7, 6] # FIX ME - hardcode
 
         results = []
         marathon = max(event.routes)
@@ -213,6 +214,7 @@ class Result:
             kwargs['event'] = event.id
             kwargs['route'] = route_ids[rider.distance != marathon]
             kwargs['user_profile'] = rider.user_profile_id
+            kwargs['number'] = rider.number
             if rider.started == False:
                 continue
             elif rider.dnf:
