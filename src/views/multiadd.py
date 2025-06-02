@@ -28,7 +28,8 @@ class MultiAddWidget(MultiAddUI):
         self.text_edit.installEventFilter(self)
 
     def eventFilter(self, obj, event):
-        if (event.type() == QtCore.QEvent.KeyPress 
+        if (isinstance(event, QtGui.QKeyEvent)
+            and event.type() == QtCore.QEvent.Type.KeyRelease
             and obj is self.text_edit
             and self.text_edit.hasFocus()
             and self.text_edit.toPlainText() != ""
@@ -36,7 +37,6 @@ class MultiAddWidget(MultiAddUI):
             if (event.key() in [QtCore.Qt.Key.Key_Return, QtCore.Qt.Key.Key_Enter]):
                 self.finish()
         return super().eventFilter(obj, event)
-
 
 
     def parse(self):
